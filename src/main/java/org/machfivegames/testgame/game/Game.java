@@ -1,13 +1,20 @@
 package main.java.org.machfivegames.testgame.game;
 
 import org.lwjgl.LWJGLException;
+import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 
 public class Game {
+
+    // class variables
+    private float x = 400, y = 300;
+    private float rotation = 0;
+    private long lastFrame;
+    private int fps;
+    private long lastFps;
 
     private void start() {
         try {
@@ -18,63 +25,67 @@ public class Game {
             System.exit(0);
         }
 
-        // init OpenGL
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glLoadIdentity();
-        GL11.glOrtho(0, 800, 0, 600, 1, -1);
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        initOpenGl();
+        getDelta();
 
         while(!Display.isCloseRequested()) {
-            pollInput();
+            int delta = getDelta();
+
+            update(delta);
             drawQuad();
+
             Display.update();
+            Display.sync(60); // Cap FPS at 60
         }
 
         Display.destroy();
     }
 
-    private void pollInput() {
-        if (Mouse.isButtonDown(0)) {
-            int x = Mouse.getX();
-            int y = Mouse.getY();
+    private void update(int delta) {
+        // rotate quad
+        rotation += 0.15f * delta;
 
-            System.out.println("MOUSE DOWN @ X: " + x + " Y: " + y);
+        if (Keyboard.isKeyDown(Keyboard.KEY_A)) x -= 0.35f * delta;
+        if (Keyboard.isKeyDown(Keyboard.KEY_D)) x += 0.35f * delta;
+
+        if (Keyboard.isKeyDown(Keyboard.KEY_W)) y -= 0.35f * delta;
+        if (Keyboard.isKeyDown(Keyboard.KEY_S)) y += 0.35f * delta;
+
+        // keep quad on the screen
+        if (x < 0) x = 0;
+        if (x > 800) x = 800;
+        if (y < 0) y = 0;
+        if (y > 600) y = 600;
+
+        updateFps();
+    }
+
+    private int getDelta() {
+        long time = getTime();
+        int delta = (int)(time-lastFrame);
+        lastFrame = time;
+
+        return delta;
+    }
+
+    private long getTime() {
+        return (Sys.getTime() * 1000) / Sys.getTimerResolution();
+    }
+
+    private void updateFps() {
+        if (getTime() - lastFps > 1000) {
+            Display.setTitle("FPS: " + fps);
+            fps = 0;
+            lastFps += 1000;
         }
+        fps++;
+    }
 
-        if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
-            System.out.println("SPACE KEY IS DOWN");
-        }
-
-        while (Keyboard.next()) {
-            if (Keyboard.getEventKeyState()) {
-                if (Keyboard.getEventKey() == Keyboard.KEY_A) {
-                    System.out.println("A Key Pressed");
-                }
-                if (Keyboard.getEventKey() == Keyboard.KEY_S) {
-                    System.out.println("S Key Pressed");
-                }
-                if (Keyboard.getEventKey() == Keyboard.KEY_D) {
-                    System.out.println("D Key Pressed");
-                }
-                if (Keyboard.getEventKey() == Keyboard.KEY_W) {
-                    System.out.println("W Key Pressed");
-                }
-            } else {
-                if (Keyboard.getEventKey() == Keyboard.KEY_A) {
-                    System.out.println("A Key Released");
-                }
-                if (Keyboard.getEventKey() == Keyboard.KEY_S) {
-                    System.out.println("S Key Released");
-                }
-                if (Keyboard.getEventKey() == Keyboard.KEY_D) {
-                    System.out.println("D Key Released");
-                }
-                if (Keyboard.getEventKey() == Keyboard.KEY_W) {
-                    System.out.println("W Key Released");
-                }
-            }
-        }
-
+    private void initOpenGl() {
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glLoadIdentity();
+        GL11.glOrtho(0, 800, 0, 600, 1, -1);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
     }
 
     private void drawQuad() {
@@ -85,17 +96,23 @@ public class Game {
         GL11.glColor3f(0.5f, 0.5f, 1.0f);
 
         // draw quad
+        GL11.glPushMatrix();
+        GL11.glTranslatef(x, y, 0);
+        GL11.glRotatef(rotation, 0f, 0f, 1f);
+        GL11.glTranslatef(-x, -y, 0);
+
         GL11.glBegin(GL11.GL_QUADS);
-        GL11.glVertex2f(100, 100);
-        GL11.glVertex2f(100+200, 100);
-        GL11.glVertex2f(100+200, 100+200);
-        GL11.glVertex2f(100, 100+200);
+        GL11.glVertex2f(x - 50, y - 50);
+        GL11.glVertex2f(x + 50, y - 50);
+        GL11.glVertex2f(x + 50, y + 50);
+        GL11.glVertex2f(x - 50, y + 50);
         GL11.glEnd();
+
+        GL11.glPopMatrix();
     }
 
     public static void main(String[] args) {
         Game game = new Game();
         game.start();
     }
-
 }
