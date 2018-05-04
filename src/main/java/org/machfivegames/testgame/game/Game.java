@@ -48,8 +48,8 @@ public class Game {
         if (Keyboard.isKeyDown(Keyboard.KEY_A)) x -= 0.35f * delta;
         if (Keyboard.isKeyDown(Keyboard.KEY_D)) x += 0.35f * delta;
 
-        if (Keyboard.isKeyDown(Keyboard.KEY_W)) y -= 0.35f * delta;
-        if (Keyboard.isKeyDown(Keyboard.KEY_S)) y += 0.35f * delta;
+        if (Keyboard.isKeyDown(Keyboard.KEY_W)) y += 0.35f * delta;
+        if (Keyboard.isKeyDown(Keyboard.KEY_S)) y -= 0.35f * delta;
 
         // keep quad on the screen
         if (x < 0) x = 0;
